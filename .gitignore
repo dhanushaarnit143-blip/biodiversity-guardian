@@ -1,0 +1,45 @@
+﻿# Python
+__pycache__/
+*.py[cod]
+*.class
+*.so
+.Python
+venv/
+.venv/
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Data
+data/raw/
+data/processed/
+*.db
+*.sqlite
+
+# Models
+models/**/*.bin
+models/**/*.pt
+models/**/*.pth
+models/**/*.onnx
+*.gguf
+
+# Environment
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Streamlit
+.streamlit/secrets.toml
+
+# Jupyter
+.ipynb_checkpoints/
