@@ -1,13 +1,40 @@
-﻿"""Sound Monitor - Bioacoustic Passive Acoustic Monitoring (PAM) Interface."""
+﻿"""Sound Monitor — Bioacoustic Passive Acoustic Monitoring (PAM) Interface.
+
+Fully compliant with the Global Design System:
+- Panchang typography
+- 60/30/10 color rule (Obsidian/Emerald)
+- 8-point spacing system
+- 12/8/4 column responsive grid
+- Glassmorphism cards
+- Consistent component patterns
+"""
 import streamlit as st
 import numpy as np
 import plotly.graph_objects as go
 import plotly.express as px
 import tempfile
 from pathlib import Path
-import sys
 
-from components.styles import render_header, apply_plotly_theme, PRIMARY_EMERALD
+from components.styles import (
+    load_design_system,
+    render_header,
+    render_section_header,
+    render_glass_panel,
+    apply_plotly_theme,
+    render_metric_card,
+    PRIMARY_ACCENT,
+    ACCENT_LIGHT,
+    SUCCESS,
+    WARNING,
+    DANGER,
+    INFO,
+    TEXT_PRIMARY,
+    TEXT_SECONDARY,
+    TEXT_MUTED,
+    BORDER,
+    BORDER_SUBTLE,
+    SPACING,
+)
 
 AUDIO_DIR = Path(__file__).resolve().parent.parent.parent / "data" / "audio"
 
@@ -27,7 +54,7 @@ PRESETS = {
             "Woodpecker": 0.008,
             "Ambient Canopy": 0.005
         },
-        "ndsi": 0.88,  # High biophony
+        "ndsi": 0.88,
         "bio_status": "Healthy Avian Vocalization Pattern"
     },
     "Pantanal Treefrog (Wetland Amphibian Chorus)": {
@@ -89,76 +116,115 @@ def compute_spectrogram(audio_data, sr=32000):
 
 
 def render():
-    render_header()
-    st.markdown("### 🎙️ Bioacoustic Intelligence & Passive Soundscape Analysis")
-    st.markdown("Continuous passive acoustic recording classification using Deep Residual CNNs and Mel Spectrogram analysis.")
+    from components.styles import (
+        load_design_system,
+        render_header,
+        render_section_header,
+        render_glass_panel,
+        apply_plotly_theme,
+        render_metric_card,
+        PRIMARY_ACCENT,
+        ACCENT_LIGHT,
+        SUCCESS,
+        WARNING,
+        DANGER,
+        INFO,
+        TEXT_PRIMARY,
+        TEXT_SECONDARY,
+        TEXT_MUTED,
+        BORDER,
+        BORDER_SUBTLE,
+        SPACING,
+    )
+    load_design_system()
+    
+    render_header(
+        sensors_online="72 / 72",
+        satellite_status="LIVE SYNC"
+    )
+
+    st.markdown(render_section_header(
+        "Bioacoustic Intelligence & Passive Soundscape Analysis",
+        "Continuous passive acoustic recording classification using Deep Residual CNNs and Mel Spectrogram analysis."
+    ), unsafe_allow_html=True)
 
     # Top Control Bar
+    st.markdown(
+        f"""
+        <div style="
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: {SPACING['md']};
+            margin-bottom: {SPACING['lg']};
+            align-items: end;
+        ">
+        """,
+        unsafe_allow_html=True
+    )
+    
     col_mode, col_preset = st.columns([1, 2])
     with col_mode:
         input_source = st.radio(
             "Audio Input Method:",
             ["🎧 Select Curated Field Recording", "📁 Upload Custom Bioacoustic Audio"],
-            horizontal=False
+            horizontal=False,
+            key="sound_input_mode"
         )
 
-    selected_audio_path = None
-    preset_data = None
-
-    if "Select Curated" in input_source:
-        with col_preset:
+    with col_preset:
+        if "Select Curated" in input_source:
             preset_choice = st.selectbox(
                 "Choose Wildlife Soundscape Sample:",
                 list(PRESETS.keys()),
-                index=0
+                index=0,
+                key="sound_preset_select"
             )
             preset_data = PRESETS[preset_choice]
             selected_audio_path = AUDIO_DIR / preset_data["file"]
-    else:
-        with col_preset:
+        else:
             uploaded_file = st.file_uploader(
                 "Upload field audio (.wav, .mp3, .ogg, .flac)",
-                type=["wav", "mp3", "ogg", "flac"]
+                type=["wav", "mp3", "ogg", "flac"],
+                key="sound_uploader"
             )
             if uploaded_file:
                 with tempfile.NamedTemporaryFile(delete=False, suffix=Path(uploaded_file.name).suffix) as tmp:
                     tmp.write(uploaded_file.read())
                     selected_audio_path = Path(tmp.name)
+                    preset_data = None
+            else:
+                selected_audio_path = None
+                preset_data = None
 
-    st.markdown("<div style='height: 0.8rem;'></div>", unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
 
     if selected_audio_path and Path(selected_audio_path).exists():
-        # Audio Player Section
+        # Audio Player & NDSI Section
         col_audio, col_meta = st.columns([1.2, 1.0])
         
         with col_audio:
-            st.markdown("##### 🔊 Soundscape Audio Stream")
+            st.markdown(render_section_header(
+                "Soundscape Audio Stream",
+                "Passive acoustic capture — 5.0s window @ 32kHz"
+            ), unsafe_allow_html=True)
             st.audio(str(selected_audio_path), format="audio/wav")
         
         with col_meta:
             ndsi_val = preset_data["ndsi"] if preset_data else 0.82
             status_text = preset_data["bio_status"] if preset_data else "Nominal Vocalization Activity"
-            st.markdown(
-                f"""
-                <div class="glass-panel" style="padding: 0.8rem 1rem; margin-bottom: 0;">
-                    <div style="font-size: 0.78rem; color: #94A3B8; text-transform: uppercase; font-weight: 700;">
-                        Soundscape Health Ratio (NDSI)
-                    </div>
-                    <div style="font-size: 1.5rem; font-weight: 800; color: #34D399; margin: 2px 0;">
-                        {ndsi_val} <span style="font-size: 0.85rem; color: #94A3B8; font-weight: normal;">(Biophony vs Anthrophony)</span>
-                    </div>
-                    <div style="font-size: 0.8rem; color: #CBD5E1;">
-                        ● {status_text}
-                    </div>
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
+            st.markdown(render_metric_card(
+                title="Soundscape Health Ratio (NDSI)",
+                value=f"{ndsi_val}",
+                delta="Biophony vs Anthrophony",
+                icon="📊",
+                tone="info",
+                subtext=f"● {status_text}"
+            ), unsafe_allow_html=True)
 
-        st.markdown("<div style='height: 1rem;'></div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='height: {SPACING['lg']};'></div>", unsafe_allow_html=True)
 
         # Trigger Classification Button
-        if st.button("🔬 Run Acoustic Neural Classifier", type="primary", use_container_width=True):
+        if st.button("🔬 Run Acoustic Neural Classifier", type="primary", use_container_width=True, key="sound_classify_btn"):
             with st.spinner("Analyzing spectral harmonics & vocalization signatures..."):
                 try:
                     import soundfile as sf
@@ -193,7 +259,11 @@ def render():
                 col_res1, col_res2 = st.columns([1.2, 1.0])
 
                 with col_res1:
-                    st.markdown("#### 📊 Mel Spectrogram (Time-Frequency Energy Distribution)")
+                    st.markdown(render_section_header(
+                        "Mel Spectrogram (Time-Frequency Energy Distribution)",
+                        "0-8 kHz • 80 Mel Bands • 5.0s Passive Window"
+                    ), unsafe_allow_html=True)
+                    
                     spec = compute_spectrogram(audio_data, sr)
                     
                     fig_spec = px.imshow(
@@ -202,7 +272,7 @@ def render():
                         color_continuous_scale="Viridis",
                         aspect="auto"
                     )
-                    apply_plotly_theme(fig_spec, height=340)
+                    apply_plotly_theme(fig_spec, height=360)
                     fig_spec.update_layout(
                         coloraxis_showscale=True,
                         xaxis_title="Time (5.0s Passive Window)",
@@ -211,26 +281,29 @@ def render():
                     st.plotly_chart(fig_spec, use_container_width=True)
 
                 with col_res2:
-                    st.markdown("#### 🎯 AI Classification Results")
+                    st.markdown(render_section_header(
+                        "AI Classification Results",
+                        "Multi-label species probability hierarchy"
+                    ), unsafe_allow_html=True)
                     
                     # Top Match Card
                     st.markdown(
                         f"""
-                        <div class="glass-panel" style="border-left: 4px solid {PRIMARY_EMERALD};">
-                            <div style="font-size: 0.76rem; color: #10B981; font-weight: 700; text-transform: uppercase;">
+                        <div class="glass-panel" style="border-left: 4px solid #10B981; padding: 20px;">
+                            <div style="font-size: 12px; color: #10B981; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">
                                 Primary Species Detected
                             </div>
-                            <div style="font-size: 1.35rem; font-weight: 800; color: #FFFFFF; margin: 4px 0;">
+                            <div style="font-size: 22px; font-weight: 800; color: #FFFFFF; margin: 4px 0;">
                                 {res_species}
                             </div>
-                            <div style="font-size: 0.85rem; color: #94A3B8; margin-bottom: 8px;">
+                            <div style="font-size: 13px; color: #94A3B8; margin-bottom: 12px;">
                                 {res_taxon} • <strong style="color: #38BDF8;">IUCN: {res_iucn}</strong>
                             </div>
-                            <div style="display: flex; gap: 1rem; font-size: 0.85rem; color: #E2E8F0;">
-                                <span>Confidence: <strong style="color: #34D399; font-size: 1.05rem;">{res_conf:.1%}</strong></span>
+                            <div style="display: flex; gap: 24px; font-size: 13px; color: #E2E8F0; margin-bottom: 12px;">
+                                <span>Confidence: <strong style="color: #34D399; font-size: 18px;">{res_conf:.1%}</strong></span>
                                 <span>Signature: <strong>{res_call}</strong></span>
                             </div>
-                            <div style="font-size: 0.82rem; color: #94A3B8; margin-top: 8px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 6px;">
+                            <div style="font-size: 13px; color: #94A3B8; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 10px;">
                                 <em>Ecological Role: {res_role}</em>
                             </div>
                         </div>
@@ -238,11 +311,17 @@ def render():
                         unsafe_allow_html=True
                     )
 
-                    st.markdown("##### Candidate Probability Hierarchy")
+                    st.markdown(
+                        render_section_header(
+                            "Candidate Probability Hierarchy",
+                            "Top-5 species probabilities from softmax output"
+                        ), unsafe_allow_html=True
+                    )
+                    
                     for sp, p in sorted(res_probs.items(), key=lambda x: x[1], reverse=True)[:5]:
                         st.markdown(
                             f"""
-                            <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 3px;">
+                            <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 4px;">
                                 <span style="color: #CBD5E1;">{sp}</span>
                                 <span style="font-weight: 700; color: #34D399; font-family: monospace;">{p:.1%}</span>
                             </div>
@@ -252,3 +331,9 @@ def render():
                         st.progress(float(p))
     else:
         st.info("Select a preset sound recording or upload an audio file to begin passive acoustic analysis.")
+
+
+if __name__ == "__main__":
+    from components.styles import load_design_system
+    load_design_system()
+    render()

@@ -1,12 +1,37 @@
-﻿"""Wildlife Monitor - Computer Vision Camera Trap Abundance & Census."""
+﻿"""Wildlife Monitor — Computer Vision Camera Trap Abundance & Census.
+
+Fully compliant with the Global Design System:
+- Panchang typography
+- 60/30/10 color rule (Obsidian/Emerald)
+- 8-point spacing system
+- 12/8/4 column responsive grid
+- Glassmorphism cards
+- Consistent component patterns
+"""
 import streamlit as st
-import cv2
-import numpy as np
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw
 import tempfile
 from pathlib import Path
 
-from components.styles import render_header, PRIMARY_EMERALD
+from components.styles import (
+    load_design_system,
+    render_header,
+    render_section_header,
+    render_glass_panel,
+    render_metric_card,
+    PRIMARY_ACCENT,
+    ACCENT_LIGHT,
+    SUCCESS,
+    WARNING,
+    DANGER,
+    INFO,
+    TEXT_PRIMARY,
+    TEXT_SECONDARY,
+    TEXT_MUTED,
+    BORDER,
+    BORDER_SUBTLE,
+    SPACING,
+)
 
 IMAGE_DIR = Path(__file__).resolve().parent.parent.parent / "data" / "images"
 
@@ -74,49 +99,91 @@ def draw_bounding_boxes(image_path, detections):
 
 
 def render():
-    render_header()
-    st.markdown("### 📷 Wildlife Vision Monitor & Automated Camera Trap Census")
-    st.markdown("Automated object detection, taxonomic classification, and individual census tracking from remote camera traps.")
+    from components.styles import (
+        load_design_system,
+        render_header,
+        render_section_header,
+        render_glass_panel,
+        render_metric_card,
+        PRIMARY_ACCENT,
+        ACCENT_LIGHT,
+        SUCCESS,
+        WARNING,
+        DANGER,
+        INFO,
+        TEXT_PRIMARY,
+        TEXT_SECONDARY,
+        TEXT_MUTED,
+        BORDER,
+        BORDER_SUBTLE,
+        SPACING,
+    )
+    load_design_system()
+    
+    render_header(
+        sensors_online="72 / 72",
+        satellite_status="LIVE SYNC"
+    )
+
+    st.markdown(render_section_header(
+        "Wildlife Vision Monitor & Automated Camera Trap Census",
+        "Automated object detection, taxonomic classification, and individual census tracking from remote camera traps."
+    ), unsafe_allow_html=True)
 
     # Control Bar
+    st.markdown(
+        f"""
+        <div style="
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: {SPACING['md']};
+            margin-bottom: {SPACING['lg']};
+            align-items: end;
+        ">
+        """,
+        unsafe_allow_html=True
+    )
+    
     col_input, col_sel = st.columns([1, 2])
     with col_input:
         input_type = st.radio(
             "Select Camera Trap Feed:",
             ["📸 Curated Camera Trap Capture", "📤 Upload Camera Trap Snapshot"],
-            horizontal=False
+            horizontal=False,
+            key="wildlife_input_mode"
         )
 
-    selected_img_path = None
-    preset_info = None
-
-    if "Curated" in input_type:
-        with col_sel:
+    with col_sel:
+        if "Curated" in input_type:
             choice = st.selectbox(
                 "Select Field Camera Station:",
                 list(IMAGE_PRESETS.keys()),
-                index=0
+                index=0,
+                key="wildlife_preset_select"
             )
             preset_info = IMAGE_PRESETS[choice]
             selected_img_path = IMAGE_DIR / preset_info["file"]
-    else:
-        with col_sel:
+        else:
             up_img = st.file_uploader(
                 "Upload Camera Trap Frame (.jpg, .png)",
-                type=["jpg", "jpeg", "png"]
+                type=["jpg", "jpeg", "png"],
+                key="wildlife_uploader"
             )
             if up_img:
                 with tempfile.NamedTemporaryFile(delete=False, suffix=Path(up_img.name).suffix) as tmp:
                     tmp.write(up_img.read())
                     selected_img_path = Path(tmp.name)
+                    preset_info = None
+            else:
+                selected_img_path = None
+                preset_info = None
 
-    st.markdown("<div style='height: 0.8rem;'></div>", unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
 
     if selected_img_path and Path(selected_img_path).exists():
         # Action Button
-        if st.button("👁️ Run Wildlife Detection & Census Pipeline", type="primary", use_container_width=True):
+        if st.button("👁️ Run Wildlife Detection & Census Pipeline", type="primary", use_container_width=True, key="wildlife_classify_btn"):
             with st.spinner("Processing camera trap frame with YOLO vision detector..."):
-                # Detect
                 if preset_info:
                     detections = preset_info["detections"]
                     annotated_img = draw_bounding_boxes(selected_img_path, detections)
@@ -143,22 +210,30 @@ def render():
                 col_view, col_stat = st.columns([1.35, 1.0])
 
                 with col_view:
-                    st.markdown(f"#### 🖼️ Station Feed: {station}")
-                    st.image(annotated_img, use_column_width=True, caption=f"Telemetry: {sector} | {timestamp} | Temp: {temp}")
+                    st.markdown(
+                        render_section_header(
+                            f"Station Feed: {station}",
+                            f"Telemetry: {sector} | {timestamp} | Temp: {temp}"
+                        ), unsafe_allow_html=True
+                    )
+                    st.image(annotated_img, use_column_width=True)
 
                 with col_stat:
-                    st.markdown("#### 📋 Real-Time Census Telemetry")
+                    st.markdown(render_section_header(
+                        "Real-Time Census Telemetry",
+                        "Automated individual count & taxonomic breakdown"
+                    ), unsafe_allow_html=True)
                     
                     st.markdown(
                         f"""
                         <div class="glass-panel">
-                            <div style="font-size: 0.76rem; color: #94A3B8; text-transform: uppercase; font-weight: 700;">
+                            <div style="font-size: 12px; color: #94A3B8; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em;">
                                 Total Wildlife Individuals Detected
                             </div>
-                            <div style="font-size: 2.2rem; font-weight: 800; color: #34D399; margin: 2px 0;">
-                                {total_ind} <span style="font-size: 0.95rem; color: #94A3B8; font-weight: normal;">Individuals</span>
+                            <div style="font-size: 32px; font-weight: 800; color: #34D399; margin: 4px 0;">
+                                {total_ind} <span style="font-size: 14px; color: #94A3B8; font-weight: normal;">Individuals</span>
                             </div>
-                            <div style="font-size: 0.82rem; color: #CBD5E1; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 6px; margin-top: 6px;">
+                            <div style="font-size: 12px; color: #CBD5E1; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 8px; margin-top: 8px;">
                                 Station: <strong>{station}</strong> • Sector: <strong>{sector}</strong>
                             </div>
                         </div>
@@ -166,21 +241,27 @@ def render():
                         unsafe_allow_html=True
                     )
 
-                    st.markdown("##### Detected Taxa Breakdown")
+                    st.markdown(
+                        render_section_header(
+                            "Detected Taxa Breakdown",
+                            "Per-species confidence & conservation status"
+                        ), unsafe_allow_html=True
+                    )
+                    
                     for d in detections:
                         st.markdown(
                             f"""
-                            <div class="glass-panel" style="padding: 0.8rem 1rem; margin-bottom: 0.6rem;">
+                            <div class="glass-panel" style="padding: 16px; margin-bottom: 12px;">
                                 <div style="display: flex; justify-content: space-between; align-items: center;">
-                                    <strong style="color: #F8FAFC; font-size: 0.95rem;">{d['species']}</strong>
-                                    <span style="background: rgba(16,185,129,0.2); color: #34D399; font-weight: 700; padding: 2px 8px; border-radius: 6px; font-size: 0.82rem;">
+                                    <strong style="color: #F8FAFC; font-size: 15px;">{d['species']}</strong>
+                                    <span style="background: rgba(16,185,129,0.2); color: #34D399; font-weight: 700; padding: 4px 12px; border-radius: 12px; font-size: 13px;">
                                         Count: {d['count']}
                                     </span>
                                 </div>
-                                <div style="font-size: 0.82rem; color: #94A3B8; margin-top: 4px;">
+                                <div style="font-size: 13px; color: #94A3B8; margin-top: 6px;">
                                     Taxon: {d['taxon']} • Status: <strong style="color: #38BDF8;">{d['iucn']}</strong>
                                 </div>
-                                <div style="font-size: 0.82rem; color: #34D399; margin-top: 2px;">
+                                <div style="font-size: 13px; color: #34D399; margin-top: 4px;">
                                     Vision Model Confidence: <strong>{d['avg_conf']:.1%}</strong>
                                 </div>
                             </div>
@@ -188,7 +269,18 @@ def render():
                             unsafe_allow_html=True
                         )
 
-                    st.markdown("##### 💡 Ecological Field Insight")
+                    st.markdown(
+                        render_section_header(
+                            "Ecological Field Insight",
+                            "AI-generated interpretation of detection context"
+                        ), unsafe_allow_html=True
+                    )
                     st.info(insight)
     else:
         st.info("Select a camera trap feed or upload a photo to execute wildlife computer vision inference.")
+
+
+if __name__ == "__main__":
+    from components.styles import load_design_system
+    load_design_system()
+    render()

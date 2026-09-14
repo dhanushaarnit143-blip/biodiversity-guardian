@@ -1,4 +1,13 @@
-﻿"""Biodiversity Map - Spatial Ecosystem Risk & Telemetry."""
+﻿"""Biodiversity Map — Spatial Ecosystem Risk & Telemetry.
+
+Fully compliant with the Global Design System:
+- Panchang typography
+- 60/30/10 color rule (Obsidian/Emerald)
+- 8-point spacing system
+- 12/8/4 column responsive grid
+- Glassmorphism cards
+- Consistent component patterns
+"""
 import streamlit as st
 import folium
 from streamlit_folium import folium_static
@@ -6,8 +15,27 @@ import plotly.graph_objects as go
 import pandas as pd
 
 from components.styles import (
-    render_header, apply_plotly_theme, PRIMARY_EMERALD, RISK_COLORS
+    load_design_system,
+    render_header,
+    render_metric_card,
+    render_section_header,
+    render_glass_panel,
+    render_status_pill,
+    apply_plotly_theme,
+    PRIMARY_ACCENT,
+    ACCENT_LIGHT,
+    SUCCESS,
+    WARNING,
+    DANGER,
+    INFO,
+    TEXT_PRIMARY,
+    TEXT_SECONDARY,
+    TEXT_MUTED,
+    BORDER,
+    BORDER_SUBTLE,
+    SPACING,
 )
+
 
 ZONES_DATA = [
     {
@@ -88,37 +116,71 @@ ZONES_DATA = [
 ]
 
 
-def render():
-    render_header()
-    st.markdown("### 🗺️ Geospatial Ecosystem Risk & Sensor Telemetry")
-    st.markdown("Real-time Passive Acoustic & Camera Trap spatial nodes overlaid on ecological risk contours.")
+RISK_COLORS = {
+    "LOW": {"color": SUCCESS, "bg": "rgba(16, 185, 129, 0.15)", "border": SUCCESS},
+    "MODERATE": {"color": WARNING, "bg": "rgba(245, 158, 11, 0.15)", "border": WARNING},
+    "HIGH": {"color": "#F97316", "bg": "rgba(249, 115, 22, 0.15)", "border": "#F97316"},
+    "CRITICAL": {"color": "#EF4444", "bg": "rgba(239, 68, 68, 0.18)", "border": "#EF4444"},
+}
 
-    # Filter Controls
+
+def render():
+    from components.styles import load_design_system, render_header, render_section_header, render_glass_panel, render_metric_card, render_status_pill
+    load_design_system()
+    
+    render_header(
+        sensors_online="72 / 72",
+        satellite_status="LIVE SYNC"
+    )
+
+    st.markdown(render_section_header(
+        "Geospatial Ecosystem Risk & Sensor Telemetry",
+        "Real-time Passive Acoustic & Camera Trap spatial nodes overlaid on ecological risk contours."
+    ), unsafe_allow_html=True)
+
+    # Filter Controls Row
+    st.markdown(
+        f"""
+        <div style="
+            display: grid;
+            grid-template-columns: 1.5fr 1.5fr 2fr;
+            gap: {SPACING['md']};
+            margin-bottom: {SPACING['lg']};
+            align-items: end;
+        ">
+        """,
+        unsafe_allow_html=True
+    )
+    
     col_f1, col_f2, col_f3 = st.columns([1.5, 1.5, 2.0])
     with col_f1:
         risk_filter = st.multiselect(
             "Filter by Risk Level",
             ["CRITICAL", "HIGH", "MODERATE", "LOW"],
-            default=["CRITICAL", "HIGH", "MODERATE", "LOW"]
+            default=["CRITICAL", "HIGH", "MODERATE", "LOW"],
+            key="map_risk_filter"
         )
     with col_f2:
         map_style = st.selectbox(
             "Map Layer",
-            ["CartoDB DarkMatter (Night Ops)", "OpenStreetMap (Topographic)", "Satellite Sim (High-Res)"],
-            index=0
+            ["CartoDB DarkMatter (Night Ops)", "OpenStreetMap (Topographic)", "CartoDB Positron (Light)"],
+            index=0,
+            key="map_style_select"
         )
     with col_f3:
         st.markdown(
             """
-            <div style="display: flex; gap: 0.8rem; align-items: center; margin-top: 1.8rem; font-size: 0.8rem;">
-                <span>🟢 Low (Healthy)</span>
-                <span>🟡 Moderate</span>
-                <span>🟠 High</span>
-                <span>🔴 Critical</span>
+            <div style="display: flex; gap: 12px; align-items: center; font-size: 12px; margin-bottom: 4px;">
+                <span style="background: rgba(16,185,129,0.15); color: #10B981; padding: 4px 10px; border-radius: 12px; font-weight: 600;">🟢 Low</span>
+                <span style="background: rgba(245,158,11,0.15); color: #F59E0B; padding: 4px 10px; border-radius: 12px; font-weight: 600;">🟡 Moderate</span>
+                <span style="background: rgba(249,115,22,0.15); color: #F97316; padding: 4px 10px; border-radius: 12px; font-weight: 600;">🟠 High</span>
+                <span style="background: rgba(239,68,68,0.15); color: #EF4444; padding: 4px 10px; border-radius: 12px; font-weight: 600;">🔴 Critical</span>
             </div>
             """,
             unsafe_allow_html=True
         )
+
+    st.markdown("</div>", unsafe_allow_html=True)
 
     # Filtered Zones
     filtered_zones = [z for z in ZONES_DATA if z["risk"] in risk_filter]
@@ -127,7 +189,7 @@ def render():
     tiles_map = {
         "CartoDB DarkMatter (Night Ops)": "CartoDB dark_matter",
         "OpenStreetMap (Topographic)": "OpenStreetMap",
-        "Satellite Sim (High-Res)": "CartoDB Positron"
+        "CartoDB Positron (Light)": "CartoDB Positron"
     }
 
     center_lat = -16.85
@@ -135,21 +197,16 @@ def render():
     m = folium.Map(
         location=[center_lat, center_lon],
         zoom_start=8,
-        tiles=tiles_map.get(map_style, "CartoDB dark_matter")
+        tiles=tiles_map.get(map_style, "CartoDB dark_matter"),
+        control_scale=True
     )
 
-    color_hex_map = {
-        "LOW": "#10B981",
-        "MODERATE": "#F59E0B",
-        "HIGH": "#F97316",
-        "CRITICAL": "#EF4444"
-    }
-
     for zone in filtered_zones:
-        color = color_hex_map[zone["risk"]]
+        rc = RISK_COLORS[zone["risk"]]
+        color = rc["color"]
         trend_arrow = "↓" if zone["trend"] < 0 else "↑"
         
-        # Outer buffer ring (indicating monitoring range)
+        # Outer buffer ring (monitoring range)
         folium.Circle(
             location=[zone["lat"], zone["lon"]],
             radius=14000,
@@ -162,18 +219,18 @@ def render():
 
         # Center pulse marker
         popup_html = f"""
-        <div style="font-family: 'Plus Jakarta Sans', sans-serif; color: #0F172A; width: 230px; padding: 4px;">
-            <div style="font-weight: 700; font-size: 1.05rem; margin-bottom: 4px;">{zone['name']}</div>
-            <div style="display: inline-block; background: {color}20; color: {color}; border: 1px solid {color}; padding: 2px 8px; border-radius: 12px; font-weight: 700; font-size: 0.75rem; margin-bottom: 8px;">
+        <div style="font-family: 'Panchang', sans-serif; color: #0F172A; width: 240px; padding: 4px;">
+            <div style="font-weight: 700; font-size: 16px; margin-bottom: 6px;">{zone['name']}</div>
+            <div style="display: inline-block; background: {rc['bg']}; color: {rc['color']}; border: 1px solid {rc['border']}; padding: 3px 10px; border-radius: 12px; font-weight: 700; font-size: 12px; margin-bottom: 10px;">
                 RISK: {zone['risk']} ({trend_arrow} {abs(zone['trend'])}%)
             </div>
-            <div style="font-size: 0.85rem; line-height: 1.4; color: #334155;">
+            <div style="font-size: 13px; line-height: 1.6; color: #334155;">
                 • <strong>Shannon Index:</strong> {zone['shannon']}<br/>
                 • <strong>Species Count:</strong> {zone['species']} taxa<br/>
                 • <strong>Canopy NDVI:</strong> {zone['ndvi']}<br/>
                 • <strong>Soil Moisture:</strong> {zone['soil_moisture']}<br/>
             </div>
-            <div style="font-size: 0.78rem; color: #64748B; margin-top: 6px; border-top: 1px solid #E2E8F0; padding-top: 4px;">
+            <div style="font-size: 12px; color: #64748B; margin-top: 8px; border-top: 1px solid #E2E8F0; padding-top: 6px;">
                 <em>{zone['threat']}</em>
             </div>
         </div>
@@ -181,56 +238,107 @@ def render():
         
         folium.CircleMarker(
             location=[zone["lat"], zone["lon"]],
-            radius=8,
+            radius=10,
             color="#FFFFFF",
-            weight=2,
+            weight=2.5,
             fill=True,
             fill_color=color,
-            fill_opacity=0.9,
+            fill_opacity=0.95,
             popup=folium.Popup(popup_html, max_width=280)
         ).add_to(m)
 
     # Render map
-    folium_static(m, width=1280, height=480)
+    st.markdown(
+        f"""
+        <div style="border-radius: 16px; overflow: hidden; border: 1px solid {BORDER}; margin-bottom: {SPACING['xl']};">
+        """,
+        unsafe_allow_html=True
+    )
+    folium_static(m, width=1280, height=520)
+    st.markdown("</div>", unsafe_allow_html=True)
 
     # Zone Inspector Section
-    st.markdown("<div style='height: 1.5rem;'></div>", unsafe_allow_html=True)
-    st.markdown("#### 🔬 Detailed Sector Intelligence & Microclimate")
+    st.markdown(render_section_header(
+        "Detailed Sector Intelligence & Microclimate",
+        "Select a monitoring sector for diagnostic deep-dive with real-time telemetry"
+    ), unsafe_allow_html=True)
 
     selected_zone_name = st.selectbox(
         "Select Monitoring Sector for Diagnostic Deep-Dive:",
         [z["name"] for z in ZONES_DATA],
-        index=0
+        index=0,
+        key="zone_selector"
     )
     zone = next(z for z in ZONES_DATA if z["name"] == selected_zone_name)
+    rc = RISK_COLORS[zone["risk"]]
 
+    # Metric row
     c1, c2, c3, c4, c5 = st.columns(5)
     with c1:
-        st.metric("Biodiversity Index (H')", f"{zone['shannon']}", delta=f"{zone['trend']}%")
+        st.markdown(render_metric_card(
+            title="Biodiversity Index (H')",
+            value=f"{zone['shannon']}",
+            delta=f"{zone['trend']}%",
+            delta_text="90d",
+            icon="📊",
+            tone="info",
+            delta_is_negative=zone['trend'] < 0
+        ), unsafe_allow_html=True)
     with c2:
-        st.metric("Species Richness", f"{zone['species']} Taxa", delta=f"{len(zone['key_species'])} key bio-indicators")
+        st.markdown(render_metric_card(
+            title="Species Richness",
+            value=f"{zone['species']} Taxa",
+            delta=f"{len(zone['key_species'])} key bio-indicators",
+            icon="🐾",
+            tone="info"
+        ), unsafe_allow_html=True)
     with c3:
-        st.metric("Canopy Health (NDVI)", f"{zone['ndvi']}", delta="Optimal > 0.75" if zone['ndvi'] > 0.75 else "Stress Detected", delta_color="normal" if zone['ndvi'] > 0.75 else "inverse")
+        ndvi_tone = "success" if zone['ndvi'] > 0.75 else "warning" if zone['ndvi'] > 0.55 else "danger"
+        st.markdown(render_metric_card(
+            title="Canopy Health (NDVI)",
+            value=f"{zone['ndvi']}",
+            delta="Optimal > 0.75" if zone['ndvi'] > 0.75 else "Stress Detected",
+            icon="🌿",
+            tone=ndvi_tone,
+            delta_is_negative=zone['ndvi'] <= 0.75
+        ), unsafe_allow_html=True)
     with c4:
-        st.metric("Soil Moisture Index", zone['soil_moisture'], delta="Volumetric")
+        st.markdown(render_metric_card(
+            title="Soil Moisture Index",
+            value=zone['soil_moisture'],
+            delta="Volumetric",
+            icon="💧",
+            tone="info"
+        ), unsafe_allow_html=True)
     with c5:
-        st.metric("Surface Temp Anomaly", zone['temp'], delta="+2.4°C vs 10yr avg", delta_color="inverse")
+        st.markdown(render_metric_card(
+            title="Surface Temp Anomaly",
+            value=zone['temp'],
+            delta="+2.4°C vs 10yr avg",
+            icon="🌡️",
+            tone="warning",
+            delta_is_negative=True
+        ), unsafe_allow_html=True)
 
-    # Diagnostic & Key Species Pill
+    # Diagnostic & Key Species Panel
     st.markdown(
         f"""
-        <div class="glass-panel" style="margin-top: 1rem;">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div class="glass-panel" style="margin-top: 24px; padding: 20px;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start;">
                 <div>
-                    <span style="font-size: 0.8rem; font-weight: 700; color: #94A3B8; text-transform: uppercase;">Primary Ecological Driver:</span>
-                    <p style="font-size: 0.95rem; color: #F1F5F9; margin: 4px 0 0 0;">
+                    <div style="font-size: 12px; font-weight: 700; color: #94A3B8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">
+                        Primary Ecological Driver
+                    </div>
+                    <p style="font-size: 15px; color: #F1F5F9; margin: 0; line-height: 1.6;">
                         {zone['threat']}
                     </p>
                 </div>
                 <div>
-                    <span style="font-size: 0.8rem; font-weight: 700; color: #94A3B8; text-transform: uppercase;">Key Bio-Indicator Species:</span>
-                    <div style="display: flex; gap: 0.5rem; margin-top: 4px;">
-                        {' '.join([f'<span style="background: rgba(16,185,129,0.15); color: #34D399; padding: 3px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: 600;">{sp}</span>' for sp in zone['key_species']])}
+                    <div style="font-size: 12px; font-weight: 700; color: #94A3B8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">
+                        Key Bio-Indicator Species
+                    </div>
+                    <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px;">
+                        {' '.join([f'<span style="background: rgba(16,185,129,0.15); color: #34D399; padding: 6px 14px; border-radius: 12px; font-size: 12px; font-weight: 600; border: 1px solid rgba(16,185,129,0.3);">{sp}</span>' for sp in zone['key_species']])}
                     </div>
                 </div>
             </div>
@@ -238,3 +346,9 @@ def render():
         """,
         unsafe_allow_html=True
     )
+
+
+if __name__ == "__main__":
+    from components.styles import load_design_system
+    load_design_system()
+    render()

@@ -2,10 +2,25 @@
 headless = true
 port = 8501
 enableCORS = false
+enableXsrfProtection = false
 
 [theme]
-primaryColor = "#10B981"
-backgroundColor = "#0B1120"
-secondaryBackgroundColor = "#1E293B"
-textColor = "#F8FAFC"
-font = "sans serif"
+# Design System Colors (60/30/10 Rule)
+# 60% Neutral Base
+primaryColor = "#10B981"          # Accent (10%)
+backgroundColor = "#0B1120"       # Neutral Base (60%)
+secondaryBackgroundColor = "#0F172A"  # Secondary (30%)
+textColor = "#F8FAFC"             # Primary text
+
+# Font
+font = "sans serif"  # Will be overridden by Panchang in CSS
+
+[runner]
+magicEnabled = true
+installTracer = false
+fixMatplotlib = true
+
+[browser]
+gatherUsageStats = false
+serverAddress = "localhost"
+serverPort = 8501
