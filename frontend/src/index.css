@@ -1,0 +1,236 @@
+/**
+ * Global base styles — Biodiversity Guardian AI
+ *
+ * Load order
+ * ----------
+ * 1. Panchang (Fontshare) — brand/heading font
+ * 2. Inter    (Bunny Fonts CDN — GDPR-friendly) — body text
+ * 3. JetBrains Mono (Bunny Fonts) — numeric readouts
+ * 4. Tailwind directives
+ * 5. CSS custom properties (design tokens, mirrors the original design-system.css)
+ * 6. Base HTML element resets
+ * 7. Scrollbar, selection, and focus styles
+ */
+
+/* ── 1. Fonts ─────────────────────────────────────────────────────────────── */
+@import url("https://api.fontshare.com/v2/css?f[]=panchang@400,500,600,700&display=swap");
+@import url("https://fonts.bunny.net/css?family=inter:400,500,600,700|jetbrains-mono:400,500,600");
+@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap");
+
+/* ── 2. Tailwind directives ───────────────────────────────────────────────── */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── 3. Design tokens (CSS custom properties) ─────────────────────────────── */
+/*
+ * These mirror the variables from the original design-system.css so that
+ * any custom CSS you write (e.g., inside chart tooltips) can reference them.
+ * The Tailwind config is the single source of truth — update there first.
+ */
+@layer base {
+  :root {
+    /* Obsidian backgrounds */
+    --color-bg-primary:     #0B1120;
+    --color-bg-secondary:   #0F1A30;
+    --color-bg-elevated:    #152140;
+    --color-bg-card:        #111E38;
+    --color-bg-input:       #243558;
+    --color-bg-sidebar:     #0D1629;
+
+    /* Emerald accent */
+    --color-accent:         #10B981;
+    --color-accent-light:   #34D399;
+    --color-accent-dark:    #059669;
+    --color-accent-muted:   rgba(16, 185, 129, 0.15);
+
+    /* Status / data colours */
+    --color-success:        #10B981;
+    --color-warning:        #F59E0B;
+    --color-danger:         #EF4444;
+    --color-info:           #38BDF8;
+    --color-orange:         #F97316;
+    --color-violet:         #A855F7;
+
+    /* Text */
+    --color-text-primary:   #F8FAFC;
+    --color-text-secondary: #CBD5E1;
+    --color-text-muted:     #94A3B8;
+    --color-text-faint:     #64748B;
+
+    /* Borders */
+    --color-border:         rgba(51, 65, 85, 0.5);
+    --color-border-subtle:  rgba(30, 41, 59, 0.4);
+    --color-border-accent:  rgba(16, 185, 129, 0.3);
+    --color-border-danger:  rgba(239, 68, 68, 0.4);
+
+    /* 8-point spacing scale */
+    --space-1:  8px;
+    --space-2:  16px;
+    --space-3:  24px;
+    --space-4:  32px;
+    --space-6:  48px;
+    --space-8:  64px;
+    --space-12: 96px;
+
+    /* Typography */
+    --font-panchang:      "Panchang", system-ui, sans-serif;
+    --font-sans:          "Inter", ui-sans-serif, system-ui, sans-serif;
+    --font-mono:          "JetBrains Mono", ui-monospace, monospace;
+    --font-space-grotesk: 'Space Grotesk', sans-serif;
+
+    /* Glassmorphism */
+    --glass-blur:        12px;
+    --glass-bg:          rgba(11, 17, 32, 0.7);
+    --glass-border:      rgba(51, 65, 85, 0.5);
+    --glass-shadow:      0 4px 24px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+
+    /* Plotly / Recharts dark eco theme baseline */
+    --chart-grid:        rgba(255, 255, 255, 0.06);
+    --chart-axis:        #64748B;
+    --chart-tooltip-bg:  rgba(11, 17, 32, 0.95);
+
+    /* Transitions */
+    --transition-fast:   150ms ease;
+    --transition-base:   250ms ease;
+    --transition-slow:   400ms ease;
+  }
+}
+
+/* ── 4. HTML/Body resets ──────────────────────────────────────────────────── */
+@layer base {
+  html {
+    /* Dark mode class is already on <html class="dark"> */
+    font-size: 13px;          /* matches the Streamlit base */
+    scroll-behavior: smooth;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background-color: var(--color-bg-primary);
+    color: var(--color-text-primary);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    min-height: 100dvh;
+    overflow-x: hidden;
+  }
+
+  /* Headings use Panchang */
+  h1, h2, h3, h4 {
+    font-family: var(--font-panchang);
+    font-weight: 600;
+    color: var(--color-text-primary);
+  }
+
+  /* Code / monospace readouts */
+  code, pre, .font-mono {
+    font-family: var(--font-mono);
+  }
+
+  /* Remove default button / input chrome */
+  button, input, textarea, select {
+    outline: none;
+  }
+
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible,
+  textarea:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+}
+
+/* ── 5. Custom scrollbar (WebKit) ─────────────────────────────────────────── */
+@layer base {
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--color-bg-primary);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(51, 65, 85, 0.6);
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-accent);
+  }
+}
+
+/* ── 6. Text selection ────────────────────────────────────────────────────── */
+@layer base {
+  ::selection {
+    background-color: rgba(16, 185, 129, 0.3);
+    color: var(--color-text-primary);
+  }
+}
+
+/* ── 7. Recharts / Plotly dark overrides ─────────────────────────────────── */
+/*
+ * These override the default white backgrounds that charting libraries inject.
+ * Keep them in @layer utilities to take precedence over library defaults.
+ */
+@layer utilities {
+  /* Recharts */
+  .recharts-surface { overflow: visible; }
+  .recharts-cartesian-grid-horizontal line,
+  .recharts-cartesian-grid-vertical   line {
+    stroke: var(--chart-grid);
+  }
+  .recharts-tooltip-wrapper {
+    outline: none;
+  }
+  .recharts-default-tooltip {
+    background:    var(--chart-tooltip-bg) !important;
+    border:        1px solid var(--color-border) !important;
+    border-radius: 8px !important;
+    backdrop-filter: blur(12px);
+    color:         var(--color-text-secondary) !important;
+    font-size:     12px;
+  }
+  .recharts-legend-item-text {
+    color: var(--color-text-muted) !important;
+  }
+
+  /* React-Leaflet map tiles dark tint */
+  .leaflet-tile-container {
+    filter: brightness(0.7) saturate(0.6) hue-rotate(180deg);
+  }
+  .leaflet-container {
+    background: var(--color-bg-primary);
+    font-family: var(--font-sans);
+  }
+  .leaflet-popup-content-wrapper {
+    background:    var(--glass-bg) !important;
+    backdrop-filter: blur(12px);
+    border:        1px solid var(--color-border) !important;
+    border-radius: 10px !important;
+    color:         var(--color-text-primary) !important;
+    box-shadow:    var(--glass-shadow) !important;
+  }
+  .leaflet-popup-tip {
+    background: var(--glass-bg) !important;
+  }
+}
+
+/* ── 8. Page-level layout ─────────────────────────────────────────────────── */
+@layer components {
+  #root {
+    min-height: 100dvh;
+  }
+
+  .page-content {
+    padding: var(--space-4);
+    overflow-y: auto;
+  }
+
+  /* Dividers matching the Streamlit --- separators */
+  .section-divider {
+    border: none;
+    border-top: 1px solid var(--color-border-subtle);
+    margin: var(--space-4) 0;
+  }
+}

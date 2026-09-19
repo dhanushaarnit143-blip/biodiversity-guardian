@@ -1,4 +1,4 @@
-﻿[project]
+[project]
 name = "biodiversity-guardian"
 version = "0.1.0"
 description = "AI-powered ecosystem monitoring platform for biodiversity conservation"
