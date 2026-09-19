@@ -1,4 +1,4 @@
-﻿# 🌿 Biodiversity Guardian AI
+# 🌿 Biodiversity Guardian AI
 
 AI-powered ecosystem monitoring platform for biodiversity conservation.
 
@@ -6,16 +6,15 @@ AI-powered ecosystem monitoring platform for biodiversity conservation.
 
 Biodiversity Guardian uses AI to listen to ecosystems, identify wildlife, monitor environmental changes, detect biodiversity decline, and provide early conservation recommendations.
 
-### Key Features
+### 🌟 Current Features
 
-- **Audio Species Identification** - CNN-based classification of bird, amphibian, and insect sounds
-- **Wildlife Image Detection** - YOLO-powered camera trap analysis
-- **Biodiversity Index** - Shannon, Simpson, and evenness metrics
-- **Change Detection** - Statistical comparison with historical baselines
-- **Risk Prediction** - XGBoost model for ecosystem risk assessment
-- **Explainable AI** - SHAP-based risk factor explanations
-- **Conservation Agent** - Local LLM for actionable recommendations
-- **Interactive Dashboard** - Streamlit-based monitoring interface
+- **Audio Species Identification**: CNN-based classification of bird, amphibian, and insect calls using mel-spectrograms.
+- **Wildlife Image Detection**: YOLOv8-powered camera trap analysis to automatically detect and count species.
+- **Biodiversity Analytics**: Computes complex ecological metrics including Shannon, Simpson, and evenness indices.
+- **Risk Prediction & Explainability**: XGBoost model for ecosystem risk assessment, paired with SHAP to provide transparent, explainable risk factor insights.
+- **Conservation AI Agent**: A local LLM (TinyLlama) provides actionable, step-by-step conservation recommendations based on the analyzed data.
+- **100% Offline Capability**: All inference (vision, audio, LLM) runs completely locally, ensuring data privacy and making it viable for remote nature reserves without internet access.
+- **Multi-modal Dashboard**: An interactive Streamlit interface featuring a custom glassmorphism design system, Plotly charts, and Folium maps to visualize ecosystem health cohesively.
 
 ## Quick Start
 
